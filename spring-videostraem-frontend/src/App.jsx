@@ -6,12 +6,13 @@ import VideoUpload from "./Components/VideoUpload";
 import { Toaster } from "react-hot-toast";
 import VideoPlayer from "./Components/VideoPlayer";
 import { Button, TextInput } from "flowbite-react";
+import VideoTable from "./Components/VideoTable";
 
 function App() {
   const [count, setCount] = useState(0);
   const [fieldValue, setFieldValue] = useState(null);
   const [videoId, setVideoId] = useState(
-    "291061d5-138b-4aa7-9bfd-3ed55b2663eb"
+    "49abab9e-b06b-4c5b-a760-bad24dbd165a"
   );
 
   function playVideo(videoId) {
@@ -76,11 +77,9 @@ function App() {
           </div>
         </div>
 
-        <div className="my-4 flex  space-x-4">
+        <div className="my-4 flex space-x-4">
           <TextInput
-            onClick={(event) => {
-              setFieldValue(event.target.value);
-            }}
+            onChange={(event) => setFieldValue(event.target.value)} // Change onClick to onChange
             placeholder="Enter video id here"
             name="video_id_field"
           />
@@ -92,6 +91,10 @@ function App() {
             Play
           </Button>
         </div>
+
+        <h2 className=" text-white text-3xl underline">Videos present in DB</h2>
+
+        <VideoTable />
       </div>
     </>
   );
