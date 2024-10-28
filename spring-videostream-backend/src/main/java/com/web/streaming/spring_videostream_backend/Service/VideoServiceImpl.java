@@ -26,15 +26,26 @@ public class VideoServiceImpl implements VideoService{
     @Value("${files.video}")
     String DIR;
 
+    @Value("${file.video.hls}")
+    String HLS_DIR;
+
     @PostConstruct
     public void init(){
         File file = new File(DIR);
         if(!file.exists()){
             file.mkdir();
-            System.out.println("Folder Created !!!!");
+            System.out.println("Folder video Created !!!!");
         }
         else{
-            System.out.println("Folder Already Created");
+            System.out.println("Folder video Already Created");
+        }
+        File file1 = new File(HLS_DIR);
+        if(!file1.exists()){
+            file1.mkdir();
+            System.out.println("Folder hls Created !!!!");
+        }
+        else{
+            System.out.println("Folder hls Already Created");
         }
     }
 
@@ -60,10 +71,17 @@ public class VideoServiceImpl implements VideoService{
 //            Video MetaData
             video.setContentType(contentType);
             video.setFilePath(path.toString());
+
 //            save Metadata
-            return videoRepo.save(video);
+            Video savedVideo = videoRepo.save(video);
+
+//            video processing
+            processVideo(savedVideo.getVideoId());
+
+            return savedVideo;
         }catch (IOException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
+            throw new RuntimeException("Error in processing video ");
         }
     }
 
@@ -82,4 +100,50 @@ public class VideoServiceImpl implements VideoService{
     public Video getByTitle(String title) {
         return null;
     }
+
+    @Override
+    public String processVideo(String videoId) {
+        Video video = this.getById(videoId);
+        String filePath = video.getFilePath();
+
+        // Path where video is located and where to store processed output
+        Path videoPath = Paths.get(filePath);
+        Path outputPath = Paths.get(HLS_DIR, videoId);
+
+        try {
+            Files.createDirectories(outputPath);  // Ensure output directory exists
+
+            // Construct the ffmpeg command
+            String ffmpegCmd = String.format(
+                    "ffmpeg -i \"%s\" -c:v libx264 -c:a aac -strict -2 -f hls -hls_time 10 -hls_list_size 0 -hls_segment_filename \"%s/segment_%%3d.ts\"  \"%s/master.m3u8\"",
+                    videoPath.toAbsolutePath(), outputPath.toAbsolutePath(), outputPath.toAbsolutePath()
+            );
+
+            // Determine correct shell based on operating system
+            ProcessBuilder processBuilder;
+            if (System.getProperty("os.name").toLowerCase().contains("win")) {
+                processBuilder = new ProcessBuilder("cmd.exe", "/c", ffmpegCmd);
+            } else {
+                processBuilder = new ProcessBuilder("/bin/bash", "-c", ffmpegCmd);
+            }
+
+            processBuilder.inheritIO();  // Log output for debugging
+            Process process = processBuilder.start();
+
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                throw new RuntimeException("ffmpeg failed with exit code " + exitCode);
+            }
+
+            return videoId;
+
+        } catch (IOException e) {
+            e.printStackTrace();  // Print error details for debugging
+            throw new RuntimeException("Video Processing failed due to IO issue.");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();  // Restore interrupted status
+            throw new RuntimeException("Video processing was interrupted.", e);
+        }
+    }
+
 }

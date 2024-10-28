@@ -3,6 +3,7 @@ package com.web.streaming.spring_videostream_backend.Service;
 import com.web.streaming.spring_videostream_backend.Model.Video;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Path;
 import java.util.List;
 
 public interface VideoService {
@@ -17,4 +18,7 @@ public interface VideoService {
 
 //    Get video by Title
     Video getByTitle(String title);
+
+//    Video Processing url
+    String processVideo(String videoId);
 }
