@@ -21,4 +21,7 @@ public interface VideoService {
 
 //    Video Processing url
     String processVideo(String videoId);
+
+//    Delete video url
+    public boolean deleteVideo(String videoId);
 }

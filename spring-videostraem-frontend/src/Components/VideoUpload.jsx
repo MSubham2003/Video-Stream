@@ -102,7 +102,7 @@ function VideoUpload() {
   }
 
   return (
-    <div className="text-white">
+    <div className={`text-white `} >
       <Card className="flex flex-col items-center justify-center">
         <h1>Upload Videos</h1>
 

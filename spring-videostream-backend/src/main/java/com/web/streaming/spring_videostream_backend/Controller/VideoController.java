@@ -208,5 +208,40 @@ public class VideoController {
                 .body(resource);
 
     }
+
+    // Delete a video
+    @DeleteMapping("/{videoId}")
+    public ResponseEntity<CustomMessage> deleteVideo(@PathVariable String videoId) {
+        try {
+            // Attempt to delete the video
+            boolean isDeleted = videoService.deleteVideo(videoId);
+
+            if (isDeleted) {
+                return ResponseEntity.ok(
+                        CustomMessage.builder()
+                                .message("Video deleted successfully.")
+                                .success(true)
+                                .build()
+                );
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(
+                                CustomMessage.builder()
+                                        .message("Video not found.")
+                                        .success(false)
+                                        .build()
+                        );
+            }
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(
+                            CustomMessage.builder()
+                                    .message("An error occurred while deleting the video.")
+                                    .success(false)
+                                    .build()
+                    );
+        }
+    }
+
 }
 

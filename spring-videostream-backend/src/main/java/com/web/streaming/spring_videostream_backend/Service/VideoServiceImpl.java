@@ -146,4 +146,39 @@ public class VideoServiceImpl implements VideoService{
         }
     }
 
+    public boolean deleteVideo(String videoId) {
+        // Retrieve the video by ID
+        Video video = videoRepo.findById(videoId).orElse(null);
+
+        if (video != null) {
+            // Delete the video file from the filesystem
+            Path videoPath = Paths.get(video.getFilePath());
+            try {
+                Files.deleteIfExists(videoPath);
+
+                // Delete HLS files (if applicable)
+                Path hlsDir = Paths.get(HLS_DIR, videoId);
+                if (Files.exists(hlsDir)) {
+                    Files.walk(hlsDir)
+                            .map(Path::toFile)
+                            .forEach(file -> {
+                                if (!file.delete()) {
+                                    System.out.println("Failed to delete: " + file.getAbsolutePath());
+                                }
+                            });
+                }
+
+                // Remove the video record from the database
+                videoRepo.delete(video);
+                return true;
+            } catch (IOException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+
 }
